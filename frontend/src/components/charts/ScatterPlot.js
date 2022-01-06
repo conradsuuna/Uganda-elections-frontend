@@ -4,24 +4,22 @@ import { useD3 } from './CustomHook'
 
 
 function ScatterPlot({ data, station }) {
+    const height = 500;
+    const width = 1000;
+    const margin = { top: 30, right: 20, bottom: 20, left: 90 };
+
     const ref = useD3(
         (svg) => {
-            const height = 500;
-            const width = 1000;
-            const margin = { top: 30, right: 20, bottom: 20, left: 90 };
-            const color_gradient = d3.scaleLinear()
-                .domain([0, 1])
-                .range(["#69b3a2", "red"]);
-
             const x = d3
                 .scaleLinear()
-                .domain(d3.extent(data, (d) => d.x))
+                .domain([0, 100])
                 .rangeRound([margin.left, width - margin.right])
 
             const y = d3
                 .scaleLinear()
-                .domain(d3.extent(data, d => d.y))
+                .domain([0, 100])
                 .rangeRound([height - margin.bottom, margin.top]);
+
 
             const xAxis = (g) =>
                 g.attr("transform", `translate(0,${height - margin.bottom})`)
@@ -63,9 +61,9 @@ function ScatterPlot({ data, station }) {
             svg.append("linearGradient")
                 .attr("id", "line-gradient")
                 .attr("gradientUnits", "userSpaceOnUse")
-                .attr("x1", 0)
+                .attr("x1", x(0))
                 .attr("y1", y(0))
-                .attr("x2", 0)
+                .attr("x2", d3.max(data, (d) => d.x))
                 .attr("y2", d3.max(data, (d) => d.y))
                 .selectAll("stop")
                 .data([
@@ -77,15 +75,6 @@ function ScatterPlot({ data, station }) {
                 .attr("stop-color", function (d) { return d.color; });
 
             // define plot
-            svg.select(".plot-area")
-                .selectAll("dot")
-                .data(data)
-                .enter()
-                .append("circle")
-                .attr("cx", (d) => x(d.x))
-                .attr("cy", (d) => y(d.y))
-                .attr("r", 5)
-                .style("fill", `url(#line-gradient)`)
 
             svg.append('text')
                 .style("fill", "steelblue")
@@ -95,12 +84,12 @@ function ScatterPlot({ data, station }) {
                 .attr('text-anchor', 'middle')
                 .text('Winner Percentage (%)')
 
-            svg.append('text')
-                .style("fill", "steelblue")
-                .attr('x', width / 2)
-                .attr('text-anchor', 'middle')
-                .attr('y', 15)
-                .text(`${station} polling stations - 2021`)
+            // svg.append('text')
+            //     .style("fill", "steelblue")
+            //     .attr('x', width / 2)
+            //     .attr('text-anchor', 'middle')
+            //     .attr('y', 15)
+            //     .text(`${station} polling stations - 2021`)
 
             svg.append('text')
                 .style("fill", "steelblue")
@@ -108,11 +97,22 @@ function ScatterPlot({ data, station }) {
                 .attr('y', height + 20)
                 .attr('text-anchor', 'middle')
                 .text(`Voter Turnout (%)`)
+
+            svg.select(".plot-area")
+                .selectAll("dot")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx", (d) => x(d.x))
+                .attr("cy", (d) => y(d.y))
+                .attr("r", 5)
+                .style("fill", `url(#line-gradient)`)
         },
         [data.length]
     );
 
     return (
+
         <svg
             ref={ref}
             style={{
@@ -122,6 +122,18 @@ function ScatterPlot({ data, station }) {
                 marginLeft: "0px",
             }}
         >
+            <text style={{ fill: "steelblue" }} x={width / 2} y={15} textAnchor='middle'>
+                {station} Polling Stations - 2021
+            </text>
+            {/* <g className="plot-area" transform={`translate( ${margin.left}, ${margin.top} )`}>
+                {data.map(d => (
+                    <circle cx={d.x} cy={d.y} r={5} style={{ fill: `url(#line-gradient)` }} />
+                ))}
+            </g> */}
+            {/* <linearGradient id="line-gradient" gradientUnits="userSpaceOnUse" y1={y(0)} y2={d3.max(data, (d) => d.x)}>
+                <stop offset="10%" stop-color="#69b3a2" />
+                <stop offset="100%" stop-color="red" />
+            </linearGradient> */}
             <g className="plot-area" />
             <g className="x-axis" />
             <g className="y-axis" />

@@ -1,11 +1,13 @@
-import * as d3 from 'd3'
-import { useEffect, useState,useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import TabPanel from '../layouts/Tabs';
 import Box from '@mui/material/Box';
 import BarChart from '../charts/BarChart';
 import ScatterPlot from '../charts/ScatterPlot';
+import API from "../api"
+import TextField from '@mui/material/TextField';
+import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 
 function a11yProps(index) {
@@ -17,58 +19,109 @@ function a11yProps(index) {
 
 export default function PresidentialElections2021() {
     const [value, setValue] = useState(0);
+    // const [barData, setBarData] = useState(null);
+    // const [scatterData, setScatterData] = useState(null);
+
+    const [barPollingStations, setBarPollingStations] = useState(null);
+
+    // 
+    const [districtData, setDistrictData] = useState(null);
+    const [stationData, setStationData] = useState(null);
+    // from select elements
+    const [pollingStation, setPollingStation] = useState('');
+    const [districtName, setDistrictName] = useState('');
 
     const handleChange = (event, newValue) => {
         setValue(newValue);
     };
 
-    let incoming_data = {
-        "MuseveniPercentage": "81.2339331619537",
-        "MaoPercentage": "0",
-        "KyagulanyiPercentage": "16.5809768637532",
-        "MuntuPercentage": "0.6426735218509",
-        "MwesigyePercentage": "0.12853470437018",
-        "MayambalaPercentage": "0",
-        "TumukundePercentage": "0.12853470437018",
-        "AmuriatPercentage": "0.6426735218509",
-        "NancyPercentage": "0.51413881748072",
-        "KatumbaPercentage": "0.12853470437018",
-        "KabuletaPercentage": "0"
+    const handleDistrictChangeScatter = (event) => {
+        let location = event.target.value
+        let name = event.target.options[event.target.selectedIndex].text
+        setDistrictName(name)
+
+        // post request
+        const payload = {
+            location_id: String(location)
+        }
+        API.post('/get_polling_stations_by_district', payload).then((res) => {
+            let data = res.data
+            data.forEach(obj => renameKey(obj, 'winner_percentage', 'y'));
+            data.forEach(obj => renameKey(obj, 'voter_turnout', 'x'));
+            // console.log(data)
+            setStationData(null)
+            setStationData(data)
+        }).catch(error => {
+            console.log(error)
+        })
+    };
+
+    const handleDistrictChangeScatterBar = (event) => {
+        let location = event.target.value
+        // post request
+        const payload = {
+            location_id: String(location)
+        }
+        API.post('/get_polling_stations', payload).then((res) => {
+            let data = res.data
+            setBarPollingStations(data)
+        }).catch(error => {
+            console.log(error)
+        })
+    };
+
+    const handleStationChange = (event) => {
+
+        setPollingStation(event.target.value);
+        // post
+        const payload = {
+            LocationName: String(event.target.value)
+        }
+        API.post('/get_polls_winners', payload).then((res) => {
+            let incoming_data = res.data
+            let data = []
+            for (let d in incoming_data) {
+                data.push({ name: d.replace("Percentage", ""), value: parseFloat(Number(incoming_data[d]).toFixed(2)) })
+            }
+            console.log(incoming_data)
+            setStationData(null)
+            setStationData(data)
+        }).catch(error => {
+            console.log(error)
+        })
+    };
+
+    function renameKey(obj, oldKey, newKey) {
+        obj[newKey] = obj[oldKey];
+        delete obj[oldKey];
     }
-    let data = []
-    for (let d in incoming_data){
-        data.push({name:d.replace("Percentage",""), value:parseFloat(Number(incoming_data[d]).toFixed(2))})
-    }
+    const data = []
 
+    useEffect(() => {
+        API.get('/get_districts').then((res) => {
+            // console.log(res.data)
+            setDistrictData(res.data)
+        }).catch(error => {
+            console.log(error)
+        })
 
-    const data2 = [
-        {x:1, y:2, name:'kampala'},
-        {x:7, y:2, name:'kampala'},
-        {x:3, y:6, name:'kampala'},
-        {x:4, y:9, name:'kampala'},
-        {x:10, y:4, name:'kampala'},
-        {x:9, y:2, name:'kampala'},
-        {x:1, y:7, name:'kampala'},
-        {x:6, y:3, name:'kampala'},
-        {x:2, y:5, name:'kampala'}
-    ]
+        // API.get('/get_any').then((res) => {
+        //     // console.log(res.data)
+        //     setStationData(res.data)
+        // }).catch(error => {
+        //     console.log(error)
+        // })
+        const test_data = [{ winner_percentage: 0, voter_turnout: 0 }]
+        setStationData(test_data)
 
-    
-    // console.log(data)
+        const test_data2 = [{ _id: "61c8c8dae8e3b248c77b5c8a", location_name: "Karangara Trading Centre" }]
+        setBarPollingStations(test_data2)
+    }, [])
 
-    // useEffect(() => {
-    //     const Chart = Plot.plot({
-    //         y: {
-    //           grid: true
-    //         },
-    //         marks: [
-    //           Plot.barY(data, {x: "letter", y: "frequency", fill: "#bab0ab"}),
-    //           Plot.ruleY([0])
-    //         ]
-    //       })
-        
-    // }, [data])
-   
+    if (!stationData) return "";
+    if (!districtData) return "";
+    if (!barPollingStations) return '';
+
     return (
         <div>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -77,13 +130,54 @@ export default function PresidentialElections2021() {
                     <Tab label="Voter turnout" {...a11yProps(1)} />
                 </Tabs>
             </Box>
+
             <TabPanel value={value} index={0}>
-                
-                <BarChart data={data} station="Kampala" />
-                
+                <form class="row g-3">
+                    <div class="col-auto">
+                        <select className="form-select" aria-label="Default select example" defaultValue="1" style={{ width: 300 }} onChange={handleDistrictChangeScatterBar}>
+                            <option value="1" dis="true">Select Districts</option>
+                            {districtData.map((d) => (
+                                <option
+                                    key={d._id}
+                                    value={d.location_id}
+                                >
+                                    {d.location_name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div class="col-auto">
+                        <div className='row'>
+                            <select className="form-select" aria-label="Default select example" defaultValue="1" style={{ width: 300 }} onChange={handleStationChange}>
+                                <option value="1" dis="true">Select Polling Station</option>
+                                {barPollingStations.map((d) => (
+                                    <option
+                                        key={d._id}
+                                        value={d.location_name}
+                                    >
+                                        {d.location_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                </form>
+                <BarChart data={stationData} station={pollingStation} />
             </TabPanel>
+
             <TabPanel value={value} index={1}>
-                <ScatterPlot data={data2} station="Kampala" />
+                <select className="form-select" aria-label="Default select example" defaultValue="1" style={{ width: 300 }} onChange={handleDistrictChangeScatter}>
+                    <option value="1" dis="true">Select Districts</option>
+                    {districtData.map((d) => (
+                        <option
+                            key={d._id}
+                            value={d.location_id}
+                        >
+                            {d.location_name}
+                        </option>
+                    ))}
+                </select>
+                <ScatterPlot data={stationData} station={districtName} />
             </TabPanel>
         </div>
     );
