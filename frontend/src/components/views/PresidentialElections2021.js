@@ -6,8 +6,6 @@ import Box from '@mui/material/Box';
 import BarChart from '../charts/BarChart';
 import ScatterPlot from '../charts/ScatterPlot';
 import API from "../api"
-import TextField from '@mui/material/TextField';
-import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
 
 
 function a11yProps(index) {
@@ -95,7 +93,6 @@ export default function PresidentialElections2021() {
         obj[newKey] = obj[oldKey];
         delete obj[oldKey];
     }
-    const data = []
 
     useEffect(() => {
         API.get('/get_districts').then((res) => {
@@ -105,12 +102,6 @@ export default function PresidentialElections2021() {
             console.log(error)
         })
 
-        // API.get('/get_any').then((res) => {
-        //     // console.log(res.data)
-        //     setStationData(res.data)
-        // }).catch(error => {
-        //     console.log(error)
-        // })
         const test_data = [{ winner_percentage: 0, voter_turnout: 0 }]
         setStationData(test_data)
 
