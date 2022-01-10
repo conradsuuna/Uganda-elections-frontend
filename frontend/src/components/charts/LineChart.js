@@ -1,24 +1,23 @@
 import React from 'react';
 import * as d3 from 'd3';
-import {useD3} from './CustomHook'
+import { useD3 } from './CustomHook'
 
 
-function BarChart({ data, station }) {
+function LineChart({ data, station }) {
     const ref = useD3(
         (svg) => {
             const height = 500;
             const width = 1000;
-            const margin = { top: 30, right: 20, bottom: 20, left: 90 };
+            const margin = { top: 50, right: 20, bottom: 20, left: 90 };
 
             const x = d3
                 .scaleBand()
-                .domain(data.map((d) => d.name))
+                .domain(data.map((d) => d.year))
                 .rangeRound([margin.left, width - margin.right])
-                .padding(0.1);
 
             const y1 = d3
                 .scaleLinear()
-                .domain([0, d3.max(data, (d) => d.value)])
+                .domain([0, 100])
                 .rangeRound([height - margin.bottom, margin.top]);
 
             const xAxis = (g) =>
@@ -26,7 +25,7 @@ function BarChart({ data, station }) {
                     .style("color", "steelblue")
                     .call(d3.axisBottom(x)
                         .tickValues(
-                            data.map(d => d.name)
+                            data.map(d => d.year)
                         )
                         .tickSizeOuter(0)
                     );
@@ -35,44 +34,44 @@ function BarChart({ data, station }) {
                 g.attr("transform", `translate(${margin.left},0)`)
                     .style("color", "steelblue")
                     .call(d3.axisLeft(y1).ticks(null, "s").tickFormat(null, "%"))
-            //   .call((g) =>
-            //     g.append("text")
-            //       .attr("x", -margin.left)
-            //       .attr("y", 10)
-            //       .attr("fill", "currentColor")
-            //       .attr("text-anchor", "start")
-            //       .text("hello")
-            //   );
 
             svg.select(".x-axis").call(xAxis);
             svg.select(".y-axis").call(y1Axis);
 
-            svg.select(".plot-area")
-                .attr("fill", "steelblue")
-                .selectAll(".bar")
-                .data(data)
-                .join("rect")
-                .attr("class", "bar")
-                .attr("x", (d) => x(d.name))
-                .attr("width", x.bandwidth())
-                .attr("y", (d) => y1(d.value))
-                .attr("height", (d) => y1(0) - y1(d.value))
-                .style('border', "1px solid black");
+            const grid = g => g
+                .attr("stroke", "currentColor")
+                .attr("stroke-opacity", 0.1)
+                .call(g => g.append("g")
+                    .selectAll("line")
+                    .data(y1.ticks())
+                    .join("line")
+                    .attr("y1", d => 0.5 + y1(d))
+                    .attr("y2", d => 0.5 + y1(d))
+                    .attr("x1", margin.left)
+                    .attr("x2", width - margin.right));
 
-            // svg.select(".plot-area").append('g')
-            // .attr('class', 'grid')
-            // .attr('transform', `translate(0, ${height})`)
-            // .call(d3.axisBottom()
-            // .scale(x)
-            // .tickSize(-height, 0, 0)
-            // .tickFormat(''))
+            svg.append("g").call(grid);
 
-            // svg.select(".plot-area").append('g')
-            // .attr('class', 'grid')
-            // .call(d3.axisLeft()
-            // .scale(y1)
-            // .tickSize(-width, 0, 0)
-            // .tickFormat(''))
+            const linePath = d3.line()
+                .x((d) => x(d.year))
+                .y((d) => y1(d.voter_turnout))
+                .curve(d3.curveLinear)(data);
+
+            // const areaPath = d3
+            //     .area()
+            //     .x((d) => x(d.year))
+            //     .y0((d) => y1(d.voter_turnout))
+            //     .y1(() => y1(d3.min(data, (d) => d.voter_turnout) - 1))
+            //     .curve(d3.curveMonotoneY)(data);
+
+            svg
+                .append('path')
+                .datum(data)
+                .attr('fill', 'none')
+                .attr('stroke', '#69b3a2')
+                .attr('stroke-width', 2)
+                .attr('class', 'line')
+                .attr('d', linePath);
 
             svg.append('text')
                 .style("fill", "steelblue")
@@ -80,30 +79,31 @@ function BarChart({ data, station }) {
                 .attr('y', margin.left / 2.4)
                 .attr('transform', 'rotate(-90)')
                 .attr('text-anchor', 'middle')
-                .text('Win Percentage (%)')
+                .text('Percentage Turnout (%)')
 
             svg.append('text')
                 .style("fill", "steelblue")
                 .attr('x', width / 2)
                 .attr('y', 20)
                 .attr('text-anchor', 'middle')
-                .text(`Presidential votes at the ${station} polling station - 2021`)
+                .text(`Voter Turnout Trend For Presidential Elections in ${station} District`)
 
             svg.append('text')
                 .style("fill", "steelblue")
                 .attr('x', width / 2)
                 .attr('y', height + 20)
                 .attr('text-anchor', 'middle')
-                .text(`Candidates`)
+                .text(`Years/Time`)
         },
         [data.length]
     );
-
+    {/* <path fill={color} d={areaPath} opacity={0.3} />
+<path strokeWidth={3} fill="none" stroke={color} d={linePath} /> */}
     return (
         <svg
             ref={ref}
             style={{
-                height: 600,
+                height: 650,
                 width: "100%",
                 marginRight: "0px",
                 marginLeft: "0px",
@@ -116,4 +116,4 @@ function BarChart({ data, station }) {
     );
 }
 
-export default BarChart;
+export default LineChart;

@@ -3,10 +3,10 @@ import * as d3 from 'd3';
 import { useD3 } from './CustomHook'
 
 
-function ScatterPlot({ data, station }) {
+function CorrScatterPlot({ data, station }) {
     const height = 500;
     const width = 1000;
-    const margin = { top: 50, right: 20, bottom: 20, left: 90 };
+    const margin = { top: 30, right: 20, bottom: 20, left: 90 };
 
     const ref = useD3(
         (svg) => {
@@ -67,7 +67,7 @@ function ScatterPlot({ data, station }) {
                 .attr("y2", d3.max(data, (d) => d.y))
                 .selectAll("stop")
                 .data([
-                    { offset: "40%", color: "#69b3a2" },
+                    { offset: "20%", color: "#69b3a2" },
                     { offset: "100%", color: "red" }
                 ])
                 .enter().append("stop")
@@ -82,7 +82,7 @@ function ScatterPlot({ data, station }) {
                 .attr('y', margin.left / 2.4)
                 .attr('transform', 'rotate(-90)')
                 .attr('text-anchor', 'middle')
-                .text('Winner Percentage (%)')
+                .text('Presidential Winner Percentage (%)')
 
             // svg.append('text')
             //     .style("fill", "steelblue")
@@ -96,7 +96,7 @@ function ScatterPlot({ data, station }) {
                 .attr('x', width / 2)
                 .attr('y', height + 20)
                 .attr('text-anchor', 'middle')
-                .text(`Voter Turnout (%)`)
+                .text(`Parliamentary Winner (%)`)
 
             svg.select(".plot-area")
                 .selectAll("dot")
@@ -116,17 +116,14 @@ function ScatterPlot({ data, station }) {
         <svg
             ref={ref}
             style={{
-                height: 650,
+                height: 600,
                 width: "100%",
                 marginRight: "0px",
                 marginLeft: "0px",
             }}
         >
-            <text style={{ fill: "steelblue" }} x={width / 2} y={12} textAnchor='middle'>
-                {station} Polling Stations - 2021 
-            </text>
-            <text style={{ fill: "grey" }} x={width / 2} y={32} textAnchor='middle'>
-                Outliers reveal abnormalities on specified polling stations
+            <text style={{ fill: "steelblue" }} x={width / 2} y={15} textAnchor='middle'>
+                Presidential Vs Parliamentary Winning Percentages for {station} - 2021
             </text>
             {/* <g className="plot-area" transform={`translate( ${margin.left}, ${margin.top} )`}>
                 {data.map(d => (
@@ -144,4 +141,4 @@ function ScatterPlot({ data, station }) {
     );
 }
 
-export default ScatterPlot;
+export default CorrScatterPlot;

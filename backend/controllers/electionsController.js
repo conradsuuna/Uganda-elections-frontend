@@ -2,6 +2,8 @@ import PollingPresidential from "../models/PollingStations.js";
 import DistrictPresidential from "../models/DistrictPresidential.js";
 import VoterTurnOut from "../models/VoterTurnOut.js";
 import PollingStationWinner from "../models/PollingStationWinner.js";
+import PresidentParties from "../models/PresidentParties.js";
+import MPParties from "../models/MPParties.js";
 
 export const districts = async (req, res) => {
 	try {
@@ -72,4 +74,81 @@ export const getAny = async (req, res) => {
 		console.log(error);
 	}
 };
+
+export const getParliamentaryPresidentialPercentagesByParty = async (req, res) => {
+	try {
+		const {
+            district_name,
+        } = req.body;
+
+		let nrm_percentage = 0
+		let nup_percentage = 0
+		let fdc_percentage = 0
+		let ant_percentage = 0
+		let dp_percentage = 0
+		let independent_percentage = 0
+
+		let total_votes = 0
+
+		const mp_parties = await MPParties.find({District:district_name}, '-_id -Name')
+		mp_parties.forEach(d => {
+			total_votes += parseFloat(Number(d.Votes.replace(',','')))
+		});
+		
+		mp_parties.forEach(d => {
+			if(d.PoliticalParty.includes('NUP')){
+				nup_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+			else if(d.PoliticalParty.includes('NRM')){
+				nrm_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+			else if(d.PoliticalParty.includes('INDEPENDENT')){
+				independent_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+			else if(d.PoliticalParty.includes('DP')){
+				dp_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+			else if(d.PoliticalParty.includes('FDC')){
+				fdc_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+			else{
+				ant_percentage += (parseFloat(Number(d.Votes.replace(',',''))) / total_votes) * 100
+			}
+		});
+
+		const mp_data = {
+			nrm_percentage: nrm_percentage,
+			nup_percentage: nup_percentage,
+			fdc_percentage: fdc_percentage,
+			ant_percentage: ant_percentage,
+			dp_percentage: dp_percentage,
+			independent_percentage: independent_percentage
+		}
+	
+		const president_parties = await PresidentParties.find({district:district_name},
+			 'nrm_percentage nup_percentage fdc_percentage ant_percentage dp_percentage independent_percentage -_id')
+		
+        res.status(200).json([president_parties[0],mp_data]);
+	} catch (error) {
+		res.status(404).json({ message: error });
+		console.log(error);
+	}
+};
+
+
+export const getPresidentialVoterTurnoutTrend = async (req, res) => {
+	try {
+
+		const {
+            district_name,
+        } = req.body;
+
+		const turnout_trend = await DistrictPresidential.find({location_name:district_name}, 'year voter_turnout -_id').sort('year') 
+        res.status(200).json(turnout_trend );
+	} catch (error) {
+		res.status(404).json({ message: error });
+		console.log(error);
+	}
+};
+
 
