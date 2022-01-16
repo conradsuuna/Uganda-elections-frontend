@@ -97,8 +97,7 @@ function LineChart({ data, station }) {
         },
         [data.length]
     );
-    {/* <path fill={color} d={areaPath} opacity={0.3} />
-<path strokeWidth={3} fill="none" stroke={color} d={linePath} /> */}
+    
     return (
         <svg
             ref={ref}
