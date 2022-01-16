@@ -109,9 +109,9 @@ export default function PresidentialElections2021() {
         setBarPollingStations(test_data2)
     }, [])
 
-    if (!stationData) return "";
-    if (!districtData) return "";
-    if (!barPollingStations) return '';
+    if (!stationData) return "Please Wait, Loading ....";
+    if (!districtData) return "Please Wait, Loading ....";
+    if (!barPollingStations) return "Please Wait, Loading ....";
 
     return (
         <div>

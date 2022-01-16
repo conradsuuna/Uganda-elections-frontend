@@ -72,8 +72,8 @@ export default function PresidentialParliamentary() {
 
     }, [])
 
-    if (!districtData) return "";
-    if (!groupedData) return '';
+    if (!districtData) return "Please Wait, Loading ....";
+    if (!groupedData) return "Please Wait, Loading ....";
 
     const parties = groupedData.map((d) => d.party)
     const stats = Object.keys(groupedData[0]).slice(1);

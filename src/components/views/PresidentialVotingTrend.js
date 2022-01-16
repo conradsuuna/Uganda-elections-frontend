@@ -62,8 +62,8 @@ export default function PresidentialParliamentary() {
 
     }, [])
 
-    if (!districtData) return "";
-    if (!trendData) return '';
+    if (!districtData) return "Please Wait, Loading ....";
+    if (!trendData) return "Please Wait, Loading ....";
 
     return (
         <div>
